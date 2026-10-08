@@ -1,0 +1,73 @@
+.editorContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 2rem;
+  overflow: hidden;
+}
+
+.titleInput {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  border: none;
+  background: transparent;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  outline: none;
+  width: 100%;
+}
+
+.titleInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.richTextContainer {
+  flex: 1;
+  overflow: hidden;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 1.125rem;
+}
+
+.headerArea {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.saveStatus {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.savingIndicator, .savedIndicator, .offlineIndicator, .errorIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.savingIndicator {
+  color: var(--primary);
+}
+
+.savedIndicator {
+  color: var(--text-tertiary);
+}
+
+.offlineIndicator {
+  color: var(--warning, #f59e0b);
+}
+
+.errorIndicator {
+  color: var(--error, #ef4444);
+}

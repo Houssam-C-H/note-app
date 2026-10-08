@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String               @unique @db.VarChar(255)
+  passwordHash       String               @db.VarChar(255)
+  displayName        String               @db.VarChar(100)
+  avatarUrl          String?              @db.VarChar(500)
+  preferences        Json                 @default("{}") @db.JsonB
+  emailVerified      Boolean              @default(false)
+  lastLoginAt        DateTime?            @db.Timestamptz
+  createdAt          DateTime             @default(now()) @db.Timestamptz
+  updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamptz
+
+  notebooks          Notebook[]
+  notes              Note[]               @relation("NoteAuthor")
+  tags               Tag[]
+  attachments        Attachment[]
+  sessions           Session[]
+  auditLogs          AuditLog[]
+  passwordResets     PasswordReset[]
+  emailVerifications EmailVerification[]
+  sharedNotes        NoteShare[]
+  sharedNotebooks    NotebookShare[]
+  ownedNoteShares    NoteShare[]          @relation("NoteShareOwner")
+  ownedNotebookShares NotebookShare[]     @relation("NotebookShareOwner")
+
+  @@index([createdAt], map: "idx_users_created_at")
+  @@map("users")
+}
+
+model Notebook {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @db.Uuid
+  title       String    @db.VarChar(200)
+  color       String    @default("#6366f1") @db.VarChar(7)
+  icon        String    @default("notebook") @db.VarChar(50)
+  sortOrder   Int       @default(0)
+  isArchived  Boolean   @default(false)
+  deletedAt   DateTime? @db.Timestamptz
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sections    Section[]
+  shares      NotebookShare[]
+
+  @@index([userId], map: "idx_notebooks_user_id")
+  @@index([deletedAt], map: "idx_notebooks_deleted_at")
+  @@map("notebooks")
+}
+
+model Section {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  notebookId  String    @db.Uuid
+  title       String    @db.VarChar(200)
+  color       String    @default("#8b5cf6") @db.VarChar(7)
+  sortOrder   Int       @default(0)
+  deletedAt   DateTime? @db.Timestamptz
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  notebook    Notebook  @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  notes       Note[]
+
+  @@index([notebookId], map: "idx_sections_notebook_id")
+  @@index([deletedAt], map: "idx_sections_deleted_at")
+  @@map("sections")
+}
+
+model Note {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sectionId     String    @db.Uuid
+  userId        String    @db.Uuid
+  title         String    @default("Untitled") @db.VarChar(500)
+  content       Json      @default("{}") @db.JsonB
+  plaintext     String    @default("") @db.Text
+  searchVector  Unsupported("tsvector")?
+  isPinned      Boolean   @default(false)
+  isFavorite    Boolean   @default(false)
+  isArchived    Boolean   @default(false)
+  sortOrder     Int       @default(0)
+  lastEditedAt  DateTime  @default(now()) @db.Timestamptz
+  deletedAt     DateTime? @db.Timestamptz
+  createdAt     DateTime  @default(now()) @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  section       Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  author        User      @relation("NoteAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  tags          NoteTag[]
+  attachments   Attachment[]
+  shares        NoteShare[]
+
+  @@index([sectionId], map: "idx_notes_section_id")
+  @@index([userId], map: "idx_notes_user_id")
+  @@index([deletedAt], map: "idx_notes_deleted_at")
+  @@index([isPinned], map: "idx_notes_is_pinned")
+  @@index([isFavorite], map: "idx_notes_is_favorite")
+  @@index([lastEditedAt], map: "idx_notes_last_edited_at")
+  @@map("notes")
+}
+
+model Tag {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @db.Uuid
+  name        String    @db.VarChar(50)
+  color       String    @default("#10b981") @db.VarChar(7)
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes       NoteTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model NoteTag {
+  noteId String @db.Uuid
+  tagId  String @db.Uuid
+
+  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+  @@index([tagId], map: "idx_note_tags_tag_id")
+  @@map("note_tags")
+}
+
+model Attachment {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  noteId        String   @db.Uuid
+  userId        String   @db.Uuid
+  filename      String   @db.VarChar(255)
+  originalName  String   @db.VarChar(255)
+  mimeType      String   @db.VarChar(100)
+  fileSize      BigInt
+  storagePath   String   @db.VarChar(500)
+  checksum      String   @db.VarChar(64)
+  createdAt     DateTime @default(now()) @db.Timestamptz
+
+  note          Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([noteId], map: "idx_attachments_note_id")
+  @@index([userId], map: "idx_attachments_user_id")
+  @@map("attachments")
+}
+
+enum Permission {
+  READ
+  EDIT
+}
+
+model NoteShare {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  noteId       String     @db.Uuid
+  ownerId      String     @db.Uuid
+  sharedWithId String     @db.Uuid
+  permission   Permission
+  createdAt    DateTime   @default(now()) @db.Timestamptz
+  updatedAt    DateTime   @default(now()) @updatedAt @db.Timestamptz
+
+  note         Note       @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  owner        User       @relation("NoteShareOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  sharedWith   User       @relation(fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, sharedWithId])
+  @@index([sharedWithId], map: "idx_note_shares_shared_with_id")
+  @@map("note_shares")
+}
+
+model NotebookShare {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  notebookId   String     @db.Uuid
+  ownerId      String     @db.Uuid
+  sharedWithId String     @db.Uuid
+  permission   Permission
+  createdAt    DateTime   @default(now()) @db.Timestamptz
+  updatedAt    DateTime   @default(now()) @updatedAt @db.Timestamptz
+
+  notebook     Notebook   @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  owner        User       @relation("NotebookShareOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  sharedWith   User       @relation(fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@unique([notebookId, sharedWithId])
+  @@index([sharedWithId], map: "idx_notebook_shares_shared_with_id")
+  @@map("notebook_shares")
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @db.Uuid
+  refreshToken String   @db.VarChar(500)
+  userAgent    String?  @db.VarChar(500)
+  ipAddress    String?  @db.VarChar(45)
+  expiresAt    DateTime @db.Timestamptz
+  createdAt    DateTime @default(now()) @db.Timestamptz
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_sessions_user_id")
+  @@index([expiresAt], map: "idx_sessions_expires_at")
+  @@map("sessions")
+}
+
+model AuditLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String?  @db.Uuid
+  action      String   @db.VarChar(50)
+  entityType  String   @db.VarChar(50)
+  entityId    String?  @db.Uuid
+  metadata    Json     @default("{}") @db.JsonB
+  ipAddress   String?  @db.VarChar(45)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_audit_logs_user_id")
+  @@index([entityType, entityId], map: "idx_audit_logs_entity")
+  @@index([createdAt], map: "idx_audit_logs_created_at")
+  @@map("audit_logs")
+}
+
+model PasswordReset {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid
+  tokenHash   String   @db.VarChar(255)
+  expiresAt   DateTime @db.Timestamptz
+  used        Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash], map: "idx_password_resets_token_hash")
+  @@index([userId], map: "idx_password_resets_user_id")
+  @@map("password_resets")
+}
+
+model EmailVerification {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid
+  tokenHash   String   @db.VarChar(255)
+  expiresAt   DateTime @db.Timestamptz
+  used        Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash], map: "idx_email_verifications_token_hash")
+  @@index([userId], map: "idx_email_verifications_user_id")
+  @@map("email_verifications")
+}
