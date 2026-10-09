@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { useNotebookStore } from '../store/notebookStore';
 import { useNoteStore } from '../store/noteStore';
 import { useUiStore } from '../store/uiStore';
+import { useOfflineSyncStore } from '../store/offlineSyncStore';
 import { authApi } from '../api/auth';
 import { NotebookSidebar } from '../components/NotebookSidebar';
 import { SectionList } from '../components/SectionList';
@@ -12,7 +13,7 @@ import { NoteEditor } from '../components/NoteEditor';
 import { SearchBar } from '../components/SearchBar';
 import { SharedWithMe } from '../components/SharedWithMe';
 import { Trash } from '../components/Trash';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, CloudOff, CloudSync, Cloud } from 'lucide-react';
 import styles from '../styles/Dashboard.module.css';
 
 export const Dashboard = () => {
@@ -21,11 +22,13 @@ export const Dashboard = () => {
   const { fetchNotebooks, activeNotebookId, activeSectionId } = useNotebookStore();
   const { activeNoteId } = useNoteStore();
   const { isSidebarOpen, currentView, toggleSidebar } = useUiStore();
+  const { isOnline, isSyncing, pendingSyncs, updatePendingCount } = useOfflineSyncStore();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotebooks();
-  }, [fetchNotebooks]);
+    updatePendingCount();
+  }, [fetchNotebooks, updatePendingCount]);
 
   const handleLogout = async () => {
     try {
@@ -82,10 +85,26 @@ export const Dashboard = () => {
             </button>
             <span className={styles.welcomeText}>Welcome, {user?.displayName}</span>
           </div>
+          
           <SearchBar />
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            Logout
-          </button>
+          
+          <div className={styles.headerActions}>
+            <div className={styles.syncStatus} title={!isOnline ? 'Offline' : pendingSyncs > 0 ? `${pendingSyncs} items to sync` : 'Synced'}>
+              {!isOnline ? (
+                <CloudOff size={20} className={styles.iconOffline} />
+              ) : isSyncing ? (
+                <CloudSync size={20} className={styles.iconSyncing} />
+              ) : pendingSyncs > 0 ? (
+                <Cloud size={20} className={styles.iconPending} />
+              ) : (
+                <Cloud size={20} className={styles.iconSynced} />
+              )}
+              {pendingSyncs > 0 && <span className={styles.syncBadge}>{pendingSyncs}</span>}
+            </div>
+            <button onClick={handleLogout} className={styles.logoutButton}>
+              Logout
+            </button>
+          </div>
         </header>
 
         <div className={styles.contentArea}>

@@ -53,6 +53,57 @@
   font-weight: 500;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.syncStatus {
+  display: flex;
+  align-items: center;
+  position: relative;
+  color: #6b7280;
+}
+
+.syncBadge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconOffline {
+  color: #9ca3af;
+}
+
+.iconSyncing {
+  color: #3b82f6;
+  animation: spin 2s linear infinite;
+}
+
+.iconPending {
+  color: #f59e0b;
+}
+
+.iconSynced {
+  color: #10b981;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .logoutButton {
   background-color: #f3f4f6;
   border: 1px solid #d1d5db;

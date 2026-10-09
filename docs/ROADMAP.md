@@ -263,7 +263,7 @@
 
 ---
 
-## Phase 9 — Offline Support
+## Phase 9 — Offline Support ✅
 
 **Goal**: Application works offline with sync on reconnect.
 
@@ -271,18 +271,18 @@
 
 | Task                              | Priority  |
 |-----------------------------------|-----------|
-| Service worker setup (Workbox)     | P0        |
-| Static asset caching               | P0        |
-| IndexedDB schema (Dexie.js)        | P0        |
-| Offline data reader                 | P0        |
-| Sync queue for mutations            | P0        |
-| Queue processor on reconnect       | P0        |
-| Conflict detection                  | P0        |
-| Conflict resolution UI             | P1        |
-| Background sync (data freshness)   | P1        |
-| Storage quota monitoring            | P2        |
-| PWA manifest                        | P1        |
-| Offline tests                       | P0        |
+| Service worker setup (Workbox)     | ✅ P0        |
+| Static asset caching               | ✅ P0        |
+| IndexedDB schema (Dexie.js)        | ✅ P0        |
+| Offline data reader                 | ✅ P0        |
+| Sync queue for mutations            | ✅ P0        |
+| Queue processor on reconnect       | ✅ P0        |
+| Conflict detection                  | ⏳ P0        |
+| Conflict resolution UI             | ⏳ P1        |
+| Background sync (data freshness)   | ✅ P1        |
+| Storage quota monitoring            | ⏳ P2        |
+| PWA manifest                        | ✅ P1        |
+| Offline tests                       | ⏳ P0        |
 
 **Deliverable**: PWA with offline note editing and sync.
 
