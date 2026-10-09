@@ -1,10 +1,6 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_DB: notespace_prod
       POSTGRES_USER: notespace
@@ -14,9 +10,11 @@ services:
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U notespace -d notespace_prod"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+    ports:
+      - "${PROD_DB_PORT:-5434}:5432"
 
   redis:
     image: redis:7-alpine
@@ -26,17 +24,15 @@ services:
     restart: always
 
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: note-app-api:latest
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://notespace:${DB_PASSWORD:-prodpassword}@postgres:5432/notespace_prod
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET:-supersecret}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - JWT_SECRET=${JWT_SECRET:-supersecret_production_key_notespace}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost,http://localhost:80,http://localhost:8080}
     ports:
-      - "3000:3000"
+      - "${PROD_API_PORT:-3002}:3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,13 +41,9 @@ services:
     restart: always
 
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      args:
-        - VITE_API_URL=${API_URL:-http://localhost:3000/api}
+    image: note-app-web:latest
     ports:
-      - "80:80"
+      - "${WEB_PORT:-8080}:80"
     depends_on:
       - api
     restart: always
