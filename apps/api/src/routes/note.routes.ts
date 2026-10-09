@@ -15,14 +15,15 @@ import {
 
 const router = Router({ mergeParams: true });
 
+// Specific static trash routes (must be before :noteId)
+router.get('/trash', requireAuth, getTrashedNotes);
+router.post('/trash/:noteId/restore', requireAuth, restoreNote);
+router.delete('/trash/:noteId', requireAuth, permanentDeleteNote);
+
 // Allow opening a note by ID with optional authentication (for public/shared links)
 router.get('/:noteId', optionalAuth, getNoteById);
 
 router.use(requireAuth);
-
-router.get('/trash', getTrashedNotes);
-router.post('/trash/:noteId/restore', restoreNote);
-router.delete('/trash/:noteId', permanentDeleteNote);
 
 router.get('/', getNotes);
 router.post('/', createNote);

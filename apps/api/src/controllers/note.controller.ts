@@ -204,6 +204,7 @@ export const updateNote = async (req: AuthenticatedRequest, res: Response) => {
 export const getNoteById = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { noteId } = req.params;
+    const userId = req.user?.userId;
 
     const note = await prisma.note.findFirst({
       where: {
@@ -212,8 +213,15 @@ export const getNoteById = async (req: AuthenticatedRequest, res: Response) => {
       },
       include: {
         section: {
-          include: { notebook: true }
+          include: { 
+            notebook: {
+              include: {
+                shares: true
+              }
+            }
+          }
         },
+        shares: true,
         tags: {
           include: { tag: true }
         }
@@ -224,8 +232,19 @@ export const getNoteById = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(404).json({ error: 'Note not found' });
     }
 
+    // Access authorization check:
+    const isAuthor = userId ? (note.userId === userId || note.section.notebook.userId === userId) : false;
+    const isDirectShare = userId ? note.shares.some(s => s.sharedWithId === userId) : false;
+    const isNotebookShare = userId ? note.section.notebook.shares.some(s => s.sharedWithId === userId) : false;
+    const isPublic = note.shares.some(s => !s.sharedWithId);
+
+    if (!isAuthor && !isDirectShare && !isNotebookShare && !isPublic) {
+      return res.status(403).json({ error: 'Access denied to this note' });
+    }
+
+    const { shares, ...noteData } = note;
     res.json({
-      ...note,
+      ...noteData,
       tags: note.tags.map(nt => nt.tag)
     });
   } catch (error) {
