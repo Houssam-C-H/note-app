@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { z } from 'zod';
 
 const createNotebookSchema = z.object({
+  id: z.string().uuid().optional(),
   title: z.string().min(1, 'Title is required').max(200),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format').optional(),
   icon: z.string().max(50).optional(),
@@ -75,14 +76,37 @@ export const createNotebook = async (req: AuthenticatedRequest, res: Response) =
     });
     const nextSortOrder = (maxSort._max.sortOrder ?? -1) + 1;
 
-    const notebook = await prisma.notebook.create({
-      data: {
-        ...validatedData,
-        userId,
-        sortOrder: nextSortOrder,
-      },
-      include: { sections: true },
-    });
+    const nbId = validatedData.id;
+    let notebook;
+
+    if (nbId) {
+      notebook = await prisma.notebook.upsert({
+        where: { id: nbId },
+        update: {
+          title: validatedData.title,
+          color: validatedData.color,
+          icon: validatedData.icon,
+        },
+        create: {
+          id: nbId,
+          title: validatedData.title,
+          color: validatedData.color,
+          icon: validatedData.icon,
+          userId,
+          sortOrder: nextSortOrder,
+        },
+        include: { sections: true },
+      });
+    } else {
+      notebook = await prisma.notebook.create({
+        data: {
+          ...validatedData,
+          userId,
+          sortOrder: nextSortOrder,
+        },
+        include: { sections: true },
+      });
+    }
 
     res.status(201).json(notebook);
   } catch (error) {
@@ -132,15 +156,81 @@ export const deleteNotebook = async (req: AuthenticatedRequest, res: Response) =
       return res.status(404).json({ error: 'Notebook not found' });
     }
 
-    // Soft delete
+    // Soft delete notebook
     await prisma.notebook.update({
       where: { id },
-      data: { deletedAt: new Date() },
+      data: { deletedAt: new Date(), isArchived: true },
     });
+
+    // Also soft delete all notes in this notebook
+    const sections = await prisma.section.findMany({ where: { notebookId: id } });
+    const sectionIds = sections.map(s => s.id);
+    if (sectionIds.length > 0) {
+      await prisma.note.updateMany({
+        where: { sectionId: { in: sectionIds } },
+        data: { deletedAt: new Date(), isArchived: true }
+      });
+    }
 
     res.json({ message: 'Notebook deleted successfully' });
   } catch (error) {
     console.error('Error deleting notebook:', error);
     res.status(500).json({ error: 'Failed to delete notebook' });
+  }
+};
+
+export const getTrashedNotebooks = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const notebooks = await prisma.notebook.findMany({
+      where: {
+        userId,
+        OR: [
+          { deletedAt: { not: null } },
+          { isArchived: true }
+        ]
+      },
+      orderBy: { deletedAt: 'desc' },
+      include: { sections: true }
+    });
+    res.json(notebooks);
+  } catch (error) {
+    console.error('Error fetching trashed notebooks:', error);
+    res.status(500).json({ error: 'Failed to fetch trashed notebooks' });
+  }
+};
+
+export const restoreNotebook = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { id } = req.params;
+    const notebook = await prisma.notebook.findFirst({ where: { id, userId } });
+    if (!notebook) {
+      return res.status(404).json({ error: 'Notebook not found' });
+    }
+    const updated = await prisma.notebook.update({
+      where: { id },
+      data: { deletedAt: null, isArchived: false }
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error('Error restoring notebook:', error);
+    res.status(500).json({ error: 'Failed to restore notebook' });
+  }
+};
+
+export const permanentDeleteNotebook = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { id } = req.params;
+    const notebook = await prisma.notebook.findFirst({ where: { id, userId } });
+    if (!notebook) {
+      return res.status(404).json({ error: 'Notebook not found' });
+    }
+    await prisma.notebook.delete({ where: { id } });
+    res.json({ message: 'Notebook permanently deleted' });
+  } catch (error) {
+    console.error('Error permanently deleting notebook:', error);
+    res.status(500).json({ error: 'Failed to permanently delete notebook' });
   }
 };

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.middleware';
+import { requireAuth, optionalAuth } from '../middleware/auth.middleware';
 import { 
   getNotes, 
   createNote, 
@@ -8,10 +8,15 @@ import {
   duplicateNote,
   getTrashedNotes,
   restoreNote,
-  permanentDeleteNote
+  permanentDeleteNote,
+  getNoteById,
+  addNoteToMyFiles
 } from '../controllers/note.controller';
 
 const router = Router({ mergeParams: true });
+
+// Allow opening a note by ID with optional authentication (for public/shared links)
+router.get('/:noteId', optionalAuth, getNoteById);
 
 router.use(requireAuth);
 
@@ -22,6 +27,7 @@ router.delete('/trash/:noteId', permanentDeleteNote);
 router.get('/', getNotes);
 router.post('/', createNote);
 router.post('/:noteId/duplicate', duplicateNote);
+router.post('/:noteId/add-to-files', addNoteToMyFiles);
 router.patch('/:noteId', updateNote);
 router.delete('/:noteId', deleteNote);
 

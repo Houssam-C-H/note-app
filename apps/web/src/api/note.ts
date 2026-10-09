@@ -107,4 +107,26 @@ export const noteApi = {
     if (!res.ok) throw new Error(data.error || 'Failed to permanently delete note');
     return data;
   },
+
+  getNoteById: async (noteId: string) => {
+    const res = await fetch(`${API_URL}/notes/${noteId}`, {
+      headers: defaultHeaders(),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch note');
+    return data;
+  },
+
+  addNoteToMyFiles: async (noteId: string, payload?: { targetNotebookId?: string; targetSectionId?: string }) => {
+    const res = await fetch(`${API_URL}/notes/${noteId}/add-to-files`, {
+      method: 'POST',
+      headers: defaultHeaders(),
+      body: JSON.stringify(payload || {}),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to add note to files');
+    return data;
+  },
 };

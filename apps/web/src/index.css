@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Microsoft OneNote Palette */
+  --primary: #7719aa;
+  --primary-light: #f3e8ff;
+  --primary-dark: #5c1385;
+  --primary-glow: rgba(119, 25, 170, 0.3);
+  
+  /* Light Theme */
+  --background: #f3f2f1;
+  --surface: #ffffff;
+  --surface-hover: #edebe9;
+  --text: #201f1e;
+  --text-secondary: #605e5c;
+  --border: #e1dfdd;
+  
+  /* Scrollbar */
+  --scrollbar-thumb: #c8c6c4;
+  --scrollbar-track: transparent;
+  
+  /* Shared values */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08);
+  --radius-md: 2px;
+  --radius-lg: 4px;
+  --transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  /* Dark Theme */
+  --primary: #c084fc;
+  --primary-light: #3b0764;
+  --primary-dark: #e9d5ff;
+  --primary-glow: rgba(192, 132, 252, 0.25);
+  
+  --background: #1f1f1f;
+  --surface: #252526;
+  --surface-hover: #2d2d2d;
+  --text: #f3f2f1;
+  --text-secondary: #a19f9d;
+  --border: #333333;
+  
+  --scrollbar-thumb: #555555;
+  --scrollbar-track: transparent;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom Scrollbars Standard */
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+/* Legacy fallback for WebKit/Blink browsers */
+@supports not (scrollbar-color: auto) {
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+}
+
+body {
+  font-family: 'Segoe UI', 'Calibri', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+::selection {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+[data-theme="dark"] ::selection {
+  background-color: var(--primary-light);
+  color: #ffffff;
+}
+
+/* Global focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+/* Remove default focus outline if focus-visible is supported */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+button, a {
+  transition: var(--transition);
+}
+
+/* ==========================================================================
+   Print / Export to PDF - Only Print the Note Sheet Content
+   ========================================================================== */
+@media print {
+  /* Hide all application navigation, ribbons, sidebars, buttons, and popups */
+  header,
+  nav,
+  aside,
+  button,
+  input[type="button"],
+  input[type="submit"],
+  [class*="appRibbon"],
+  [class*="tier2Toolbar"],
+  [class*="NotebookSidebar"],
+  [class*="notebookSidebar"],
+  [class*="sidebar"],
+  [class*="topActionsBar"],
+  [class*="bubbleMenu"],
+  [class*="stickyModalBackdrop"],
+  [class*="StickyNotes"],
+  [class*="searchContainer"],
+  [class*="dropdown"],
+  [class*="AttachmentList"],
+  [class*="emptyCreateBtn"],
+  [class*="toaster"],
+  [role="status"] {
+    display: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 12pt;
+  }
+
+  /* Unfold flex wrappers so full note content prints across pages cleanly */
+  #root,
+  [class*="dashboardContainer"],
+  [class*="workspace"],
+  [class*="contentArea"],
+  [class*="canvasContainer"] {
+    display: block !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  [class*="canvasSheet"] {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10mm 15mm !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-image: none !important; /* Strip ruled lines in print */
+  }
+
+  /* Note Header Formatting */
+  [class*="pageTitleInput"] {
+    display: block !important;
+    font-size: 22pt !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: 4px !important;
+    width: 100% !important;
+  }
+
+  [class*="dateTimeHeader"] {
+    display: block !important;
+    font-size: 9pt !important;
+    color: #666666 !important;
+    margin-bottom: 6px !important;
+  }
+
+  [class*="titleDivider"] {
+    display: block !important;
+    border-bottom: 1px solid #d1d1d1 !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* Note Body Content */
+  [class*="editorArea"],
+  [class*="editorContent"],
+  .tiptap {
+    display: block !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    line-height: 1.6 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Tables in print */
+  .tiptap table {
+    page-break-inside: avoid;
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  .tiptap td, .tiptap th {
+    border: 1px solid #999999 !important;
+    padding: 4px 6px !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+
+  .tiptap th {
+    background: #f0f0f0 !important;
+    font-weight: bold !important;
+  }
+
+  /* Code blocks in print */
+  .tiptap pre {
+    page-break-inside: avoid;
+    border: 1px solid #cccccc !important;
+    background: #f8f8f8 !important;
+    color: #222222 !important;
+  }
+}

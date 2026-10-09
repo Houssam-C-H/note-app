@@ -18,6 +18,7 @@ export interface Note {
   lastEditedAt: string;
   createdAt: string;
   updatedAt: string;
+  parentId?: string | null;
 }
 
 interface NoteState {
@@ -26,8 +27,9 @@ interface NoteState {
   isLoading: boolean;
   error: string | null;
   fetchNotes: (notebookId: string, sectionId: string) => Promise<void>;
+  fetchNotesForNotebook: (notebookId: string, sections: { id: string }[]) => Promise<void>;
   setActiveNote: (id: string | null) => void;
-  createNote: (notebookId: string, sectionId: string, title?: string) => Promise<void>;
+  createNote: (notebookId: string, sectionId: string, title?: string, parentId?: string | null) => Promise<string | undefined>;
   updateNote: (notebookId: string, sectionId: string, noteId: string, updates: Partial<Note>) => Promise<void>;
   deleteNote: (notebookId: string, sectionId: string, noteId: string) => Promise<void>;
   duplicateNote: (notebookId: string, sectionId: string, noteId: string) => Promise<void>;
@@ -35,7 +37,7 @@ interface NoteState {
 
 const generateId = () => crypto.randomUUID();
 
-export const useNoteStore = create<NoteState>((set, get) => ({
+export const useNoteStore = create<NoteState>((set) => ({
   notes: [],
   activeNoteId: null,
   isLoading: false,
@@ -52,7 +54,6 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     }
 
     try {
-      // 1. Load from Dexie first (fast)
       const offlineNotes = await db.notes
         .where({ sectionId })
         .toArray();
@@ -62,16 +63,18 @@ export const useNoteStore = create<NoteState>((set, get) => ({
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
       if (filteredNotes.length > 0) {
-        set({ notes: filteredNotes as Note[], isLoading: false });
-      } else {
-        set({ notes: [], isLoading: false });
+        set((state) => {
+          const map = new Map(state.notes.map(n => [n.id, n]));
+          for (const n of filteredNotes) {
+            map.set(n.id, n as unknown as Note);
+          }
+          return { notes: Array.from(map.values()), isLoading: false };
+        });
       }
 
-      // 2. Fetch from API if online
       if (useOfflineSyncStore.getState().isOnline) {
         const apiNotes = await noteApi.getNotes(notebookId, sectionId);
         
-        // Save to Dexie
         await db.transaction('rw', db.notes, async () => {
           for (const note of apiNotes) {
             await db.notes.put({
@@ -81,7 +84,13 @@ export const useNoteStore = create<NoteState>((set, get) => ({
           }
         });
 
-        set({ notes: apiNotes, isLoading: false });
+        set((state) => {
+          const map = new Map(state.notes.map(n => [n.id, n]));
+          for (const n of apiNotes) {
+            map.set(n.id, n);
+          }
+          return { notes: Array.from(map.values()), isLoading: false };
+        });
       }
     } catch (err: any) {
       console.error("Fetch notes error", err);
@@ -89,7 +98,65 @@ export const useNoteStore = create<NoteState>((set, get) => ({
     }
   },
 
-  createNote: async (notebookId, sectionId, title) => {
+  fetchNotesForNotebook: async (notebookId, sections) => {
+    const user = useAuthStore.getState().user;
+    if (!user || sections.length === 0) return;
+
+    const sectionIds = sections.map(s => s.id);
+
+    try {
+      // 1. Load from Dexie
+      const offlineNotes = await db.notes
+        .where('sectionId')
+        .anyOf(sectionIds)
+        .toArray();
+      
+      const filtered = offlineNotes
+        .filter(n => !n.isArchived && n.deletedAt === null);
+
+      if (filtered.length > 0) {
+        set(state => {
+          const map = new Map(state.notes.map(n => [n.id, n]));
+          for (const n of filtered) {
+            map.set(n.id, n as unknown as Note);
+          }
+          return { notes: Array.from(map.values()) };
+        });
+      }
+
+      // 2. Load from API if online
+      if (useOfflineSyncStore.getState().isOnline) {
+        const allFetched: Note[] = [];
+        for (const sec of sections) {
+          try {
+            const apiNotes = await noteApi.getNotes(notebookId, sec.id);
+            allFetched.push(...apiNotes);
+            await db.transaction('rw', db.notes, async () => {
+              for (const n of apiNotes) {
+                await db.notes.put({ ...n, userId: user.id });
+              }
+            });
+          } catch (e) {
+            // Section might be empty
+          }
+        }
+
+        if (allFetched.length > 0) {
+          set(state => {
+            const map = new Map(state.notes.map(n => [n.id, n]));
+            for (const n of allFetched) {
+              map.set(n.id, n);
+            }
+            return { notes: Array.from(map.values()) };
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Fetch notes for notebook error", err);
+    }
+  },
+
+  createNote: async (notebookId, sectionId, title, parentId) => {
     const user = useAuthStore.getState().user;
     if (!user) return;
 
@@ -98,7 +165,7 @@ export const useNoteStore = create<NoteState>((set, get) => ({
       id,
       sectionId,
       userId: user.id,
-      title: title || '',
+      title: title || 'Untitled Page',
       content: null,
       plaintext: '',
       isPinned: false,
@@ -107,7 +174,8 @@ export const useNoteStore = create<NoteState>((set, get) => ({
       sortOrder: 0,
       lastEditedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      parentId: parentId || null
     };
 
     // Save locally
@@ -124,23 +192,22 @@ export const useNoteStore = create<NoteState>((set, get) => ({
       type: 'CREATE',
       entity: 'NOTE',
       entityId: id,
-      data: { notebookId, sectionId, title: newNote.title }
+      data: { id, notebookId, sectionId, title: newNote.title }
     });
+
+    return id;
   },
 
   updateNote: async (notebookId, sectionId, noteId, updates) => {
-    // Update locally
     const existing = await db.notes.get(noteId);
     if (existing) {
       await db.notes.put({ ...existing, ...updates, updatedAt: new Date().toISOString() } as any);
     }
 
-    // Update state
     set((state) => ({
       notes: state.notes.map(n => n.id === noteId ? { ...n, ...updates } as Note : n)
     }));
 
-    // Queue sync
     await useOfflineSyncStore.getState().enqueueMutation({
       type: 'UPDATE',
       entity: 'NOTE',
@@ -150,19 +217,16 @@ export const useNoteStore = create<NoteState>((set, get) => ({
   },
 
   deleteNote: async (notebookId, sectionId, noteId) => {
-    // Soft delete locally to match backend trash feature
     const existing = await db.notes.get(noteId);
     if (existing) {
       await db.notes.put({ ...existing, isArchived: true, deletedAt: new Date().toISOString() } as any);
     }
 
-    // Update state
     set((state) => ({
       notes: state.notes.filter(n => n.id !== noteId),
       activeNoteId: state.activeNoteId === noteId ? null : state.activeNoteId
     }));
 
-    // Queue sync
     await useOfflineSyncStore.getState().enqueueMutation({
       type: 'DELETE',
       entity: 'NOTE',
@@ -172,8 +236,6 @@ export const useNoteStore = create<NoteState>((set, get) => ({
   },
 
   duplicateNote: async (notebookId, sectionId, noteId) => {
-    // Duplication requires reading the note, copying it, and creating a new one.
-    // In an offline-first architecture, we do it locally and push a CREATE.
     const user = useAuthStore.getState().user;
     if (!user) return;
 
@@ -190,16 +252,13 @@ export const useNoteStore = create<NoteState>((set, get) => ({
       lastEditedAt: new Date().toISOString(),
     };
 
-    // Save locally
     await db.notes.put(newNote);
 
-    // Update state
     set((state) => ({
-      notes: [newNote as Note, ...state.notes],
+      notes: [newNote as unknown as Note, ...state.notes],
       activeNoteId: id
     }));
 
-    // Queue sync (simulate by creating the content via a CREATE)
     await useOfflineSyncStore.getState().enqueueMutation({
       type: 'CREATE',
       entity: 'NOTE',

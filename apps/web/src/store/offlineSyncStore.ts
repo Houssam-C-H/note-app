@@ -100,8 +100,12 @@ async function processOperation(op: SyncOperation) {
     url = op.type === 'CREATE' ? `${API_URL}/notebooks/${op.data.notebookId}/sections` : `${API_URL}/notebooks/${op.data.notebookId}/sections/${op.entityId}`;
   } else if (op.entity === 'NOTE') {
     url = op.type === 'CREATE' 
-      ? `${API_URL}/notebooks/${op.data.notebookId}/sections/${op.data.sectionId}/notes` 
-      : `${API_URL}/notebooks/${op.data.notebookId}/sections/${op.data.sectionId}/notes/${op.entityId}`;
+      ? (op.data?.notebookId && op.data?.sectionId 
+          ? `${API_URL}/notebooks/${op.data.notebookId}/sections/${op.data.sectionId}/notes` 
+          : `${API_URL}/notes`)
+      : (op.data?.notebookId && op.data?.sectionId 
+          ? `${API_URL}/notebooks/${op.data.notebookId}/sections/${op.data.sectionId}/notes/${op.entityId}` 
+          : `${API_URL}/notes/${op.entityId}`);
   }
 
   if (op.type === 'CREATE') method = 'POST';
@@ -118,7 +122,7 @@ async function processOperation(op: SyncOperation) {
   const res = await fetch(url, {
     method,
     headers,
-    body: (method !== 'DELETE' && op.data) ? JSON.stringify(op.data) : undefined,
+    body: (method !== 'DELETE' && op.data) ? JSON.stringify({ ...op.data, id: op.entityId }) : undefined,
   });
 
   if (!res.ok) {

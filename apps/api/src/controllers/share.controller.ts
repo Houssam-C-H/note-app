@@ -1,6 +1,7 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 const shareSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -9,7 +10,7 @@ const shareSchema = z.object({
 
 // NOTEBOOK SHARES
 
-export const shareNotebook = async (req: Request, res: Response) => {
+export const shareNotebook = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { notebookId } = req.params;
@@ -56,7 +57,7 @@ export const shareNotebook = async (req: Request, res: Response) => {
   }
 };
 
-export const revokeNotebookShare = async (req: Request, res: Response) => {
+export const revokeNotebookShare = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { notebookId, sharedWithId } = req.params;
@@ -81,14 +82,27 @@ export const revokeNotebookShare = async (req: Request, res: Response) => {
   }
 };
 
-export const listNotebookShares = async (req: Request, res: Response) => {
+export const listNotebookShares = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { notebookId } = req.params;
 
-    const notebook = await prisma.notebook.findUnique({ where: { id: notebookId } });
+    const notebook = await prisma.notebook.findUnique({
+      where: { id: notebookId },
+      include: {
+        user: { select: { id: true, email: true, displayName: true } }
+      }
+    });
     if (!notebook) return res.status(404).json({ error: 'Notebook not found' });
-    if (notebook.userId !== userId) return res.status(403).json({ error: 'Forbidden' });
+
+    const isOwner = notebook.userId === userId;
+    const hasShare = await prisma.notebookShare.findFirst({
+      where: { notebookId, sharedWithId: userId }
+    });
+
+    if (!isOwner && !hasShare) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
 
     const shares = await prisma.notebookShare.findMany({
       where: { notebookId },
@@ -96,10 +110,16 @@ export const listNotebookShares = async (req: Request, res: Response) => {
         sharedWith: {
           select: { id: true, email: true, displayName: true },
         },
+        owner: {
+          select: { id: true, email: true, displayName: true },
+        }
       },
     });
 
-    res.status(200).json(shares);
+    res.status(200).json({
+      owner: notebook.user,
+      shares,
+    });
   } catch (error) {
     console.error('Error listing notebook shares:', error);
     res.status(500).json({ error: 'Failed to list notebook shares' });
@@ -108,7 +128,7 @@ export const listNotebookShares = async (req: Request, res: Response) => {
 
 // NOTE SHARES
 
-export const shareNote = async (req: Request, res: Response) => {
+export const shareNote = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { noteId } = req.params;
@@ -155,21 +175,21 @@ export const shareNote = async (req: Request, res: Response) => {
   }
 };
 
-export const revokeNoteShare = async (req: Request, res: Response) => {
+export const revokeNoteShare = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { noteId, sharedWithId } = req.params;
 
     const note = await prisma.note.findUnique({ where: { id: noteId } });
     if (!note) return res.status(404).json({ error: 'Note not found' });
-    if (note.userId !== userId) return res.status(403).json({ error: 'Forbidden' });
+    if (note.userId !== userId && sharedWithId !== userId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
 
-    await prisma.noteShare.delete({
+    await prisma.noteShare.deleteMany({
       where: {
-        noteId_sharedWithId: {
-          noteId,
-          sharedWithId,
-        },
+        noteId,
+        sharedWithId,
       },
     });
 
@@ -180,14 +200,35 @@ export const revokeNoteShare = async (req: Request, res: Response) => {
   }
 };
 
-export const listNoteShares = async (req: Request, res: Response) => {
+export const listNoteShares = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { noteId } = req.params;
 
-    const note = await prisma.note.findUnique({ where: { id: noteId } });
+    const note = await prisma.note.findUnique({
+      where: { id: noteId },
+      include: {
+        author: {
+          select: { id: true, email: true, displayName: true },
+        },
+      },
+    });
     if (!note) return res.status(404).json({ error: 'Note not found' });
-    if (note.userId !== userId) return res.status(403).json({ error: 'Forbidden' });
+
+    const isOwner = note.userId === userId;
+    const directShare = await prisma.noteShare.findFirst({
+      where: { noteId, sharedWithId: userId },
+    });
+    const notebookShare = await prisma.notebookShare.findFirst({
+      where: {
+        notebook: { sections: { some: { id: note.sectionId } } },
+        sharedWithId: userId,
+      },
+    });
+
+    if (!isOwner && !directShare && !notebookShare) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
 
     const shares = await prisma.noteShare.findMany({
       where: { noteId },
@@ -195,10 +236,16 @@ export const listNoteShares = async (req: Request, res: Response) => {
         sharedWith: {
           select: { id: true, email: true, displayName: true },
         },
+        owner: {
+          select: { id: true, email: true, displayName: true },
+        },
       },
     });
 
-    res.status(200).json(shares);
+    res.status(200).json({
+      owner: note.author,
+      shares,
+    });
   } catch (error) {
     console.error('Error listing note shares:', error);
     res.status(500).json({ error: 'Failed to list note shares' });
@@ -207,7 +254,7 @@ export const listNoteShares = async (req: Request, res: Response) => {
 
 // SHARED WITH ME ENDPOINTS
 
-export const getSharedWithMe = async (req: Request, res: Response) => {
+export const getSharedWithMe = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 

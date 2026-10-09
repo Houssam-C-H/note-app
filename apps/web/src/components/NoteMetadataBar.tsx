@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNoteStore } from '../store/noteStore';
 import { useNotebookStore } from '../store/notebookStore';
-import { Pin, Star, Archive, Clock, Copy, Share2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Pin, Star, Archive, Copy, Share2 } from 'lucide-react';
 import { TagList } from './TagList';
 import { ShareDialog } from './ShareDialog';
 import styles from './NoteMetadataBar.module.css';
@@ -41,19 +40,10 @@ export const NoteMetadataBar = () => {
     }
   };
 
-  const formattedDate = activeNote.lastEditedAt 
-    ? format(new Date(activeNote.lastEditedAt), "MMM d, yyyy 'at' h:mm a")
-    : 'Unknown';
-
   const activeNotebook = notebooks.find(nb => nb.id === activeNotebookId);
 
   return (
     <div className={styles.metadataBar}>
-      <div className={styles.timestamp}>
-        <Clock size={14} className={styles.icon} />
-        <span>Last edited {formattedDate}</span>
-      </div>
-      
       <div className={styles.actions}>
         <select 
           className={styles.sectionSelect}

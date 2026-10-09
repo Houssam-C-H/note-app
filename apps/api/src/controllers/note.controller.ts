@@ -4,6 +4,8 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { z } from 'zod';
 
 const createNoteSchema = z.object({
+  id: z.string().uuid().optional(),
+  sectionId: z.string().uuid().optional(),
   title: z.string().max(500).optional().default('Untitled'),
   content: z.record(z.any()).optional().default({}),
   plaintext: z.string().optional().default(''),
@@ -75,12 +77,16 @@ export const getNotes = async (req: AuthenticatedRequest, res: Response) => {
 export const createNote = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const { sectionId } = req.params;
     const validatedData = createNoteSchema.parse(req.body);
+    const targetSectionId = req.params.sectionId || validatedData.sectionId;
+
+    if (!targetSectionId) {
+      return res.status(400).json({ error: 'sectionId is required' });
+    }
 
     const section = await prisma.section.findFirst({
       where: { 
-        id: sectionId,
+        id: targetSectionId,
         OR: [
           { notebook: { userId } },
           { notebook: { shares: { some: { sharedWithId: userId, permission: 'EDIT' } } } }
@@ -94,19 +100,45 @@ export const createNote = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     const maxSort = await prisma.note.aggregate({
-      where: { sectionId },
+      where: { sectionId: targetSectionId },
       _max: { sortOrder: true },
     });
     const nextSortOrder = (maxSort._max.sortOrder ?? -1) + 1;
 
-    const note = await prisma.note.create({
-      data: {
-        ...validatedData,
-        sectionId,
-        userId,
-        sortOrder: nextSortOrder,
-      },
-    });
+    const noteId = validatedData.id;
+    let note;
+
+    if (noteId) {
+      note = await prisma.note.upsert({
+        where: { id: noteId },
+        update: {
+          title: validatedData.title,
+          content: validatedData.content,
+          plaintext: validatedData.plaintext,
+          sectionId: targetSectionId,
+        },
+        create: {
+          id: noteId,
+          title: validatedData.title,
+          content: validatedData.content,
+          plaintext: validatedData.plaintext,
+          sectionId: targetSectionId,
+          userId,
+          sortOrder: nextSortOrder,
+        },
+      });
+    } else {
+      note = await prisma.note.create({
+        data: {
+          title: validatedData.title,
+          content: validatedData.content,
+          plaintext: validatedData.plaintext,
+          sectionId: targetSectionId,
+          userId,
+          sortOrder: nextSortOrder,
+        },
+      });
+    }
 
     res.status(201).json(note);
   } catch (error) {
@@ -169,6 +201,39 @@ export const updateNote = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
+export const getNoteById = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { noteId } = req.params;
+
+    const note = await prisma.note.findFirst({
+      where: {
+        id: noteId,
+        deletedAt: null,
+      },
+      include: {
+        section: {
+          include: { notebook: true }
+        },
+        tags: {
+          include: { tag: true }
+        }
+      }
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    res.json({
+      ...note,
+      tags: note.tags.map(nt => nt.tag)
+    });
+  } catch (error) {
+    console.error('Error fetching note by id:', error);
+    res.status(500).json({ error: 'Failed to fetch note' });
+  }
+};
+
 export const deleteNote = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -177,9 +242,10 @@ export const deleteNote = async (req: AuthenticatedRequest, res: Response) => {
     const note = await prisma.note.findFirst({
       where: { 
         id: noteId,
-        sectionId,
+        ...(sectionId ? { sectionId } : {}),
         OR: [
           { userId },
+          { section: { notebook: { userId } } },
           { section: { notebook: { shares: { some: { sharedWithId: userId, permission: 'EDIT' } } } } },
           { shares: { some: { sharedWithId: userId, permission: 'EDIT' } } }
         ]
@@ -246,6 +312,136 @@ export const duplicateNote = async (req: AuthenticatedRequest, res: Response) =>
   } catch (error) {
     console.error('Error duplicating note:', error);
     res.status(500).json({ error: 'Failed to duplicate note' });
+  }
+};
+
+export const addNoteToMyFiles = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { noteId } = req.params;
+    const { targetSectionId, targetNotebookId } = req.body || {};
+
+    // 1. Find the shared note
+    const sourceNote = await prisma.note.findFirst({
+      where: { id: noteId, deletedAt: null },
+      include: {
+        section: { include: { notebook: true } }
+      }
+    });
+
+    if (!sourceNote) {
+      return res.status(404).json({ error: 'Shared note not found' });
+    }
+
+    // 2. Resolve or create target section in user's notebook
+    let destSectionId = targetSectionId;
+
+    if (!destSectionId && targetNotebookId) {
+      const sec = await prisma.section.findFirst({
+        where: { notebookId: targetNotebookId, deletedAt: null },
+        orderBy: { sortOrder: 'asc' }
+      });
+      if (sec) destSectionId = sec.id;
+    }
+
+    if (!destSectionId) {
+      // Find or create default notebook for user
+      let nb = await prisma.notebook.findFirst({
+        where: { userId, isArchived: false, deletedAt: null },
+        include: { sections: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } } }
+      });
+
+      if (!nb) {
+        nb = await prisma.notebook.create({
+          data: {
+            title: 'My Notebook',
+            userId,
+            color: '#7719aa'
+          },
+          include: { sections: true }
+        });
+      }
+
+      let sec = nb.sections && nb.sections.length > 0 ? nb.sections[0] : null;
+      if (!sec) {
+        sec = await prisma.section.create({
+          data: {
+            title: 'Main',
+            notebookId: nb.id,
+            color: '#7719aa'
+          }
+        });
+      }
+
+      destSectionId = sec.id;
+    }
+
+    // 3. Create the note under the user's section
+    const maxSort = await prisma.note.aggregate({
+      where: { sectionId: destSectionId },
+      _max: { sortOrder: true }
+    });
+    const nextSortOrder = (maxSort._max.sortOrder ?? -1) + 1;
+
+    const newNote = await prisma.note.create({
+      data: {
+        title: sourceNote.title,
+        content: (sourceNote.content as any) || {},
+        plaintext: sourceNote.plaintext || '',
+        sectionId: destSectionId,
+        userId,
+        sortOrder: nextSortOrder,
+      },
+      include: {
+        section: {
+          include: { notebook: true }
+        }
+      }
+    });
+
+    // Also link note share for collaboration tracking between both users
+    try {
+      await prisma.noteShare.upsert({
+        where: {
+          noteId_sharedWithId: {
+            noteId: sourceNote.id,
+            sharedWithId: userId
+          }
+        },
+        update: {},
+        create: {
+          noteId: sourceNote.id,
+          ownerId: sourceNote.userId,
+          sharedWithId: userId,
+          permission: 'EDIT'
+        }
+      });
+
+      if (sourceNote.userId !== userId) {
+        await prisma.noteShare.upsert({
+          where: {
+            noteId_sharedWithId: {
+              noteId: newNote.id,
+              sharedWithId: sourceNote.userId
+            }
+          },
+          update: {},
+          create: {
+            noteId: newNote.id,
+            ownerId: userId,
+            sharedWithId: sourceNote.userId,
+            permission: 'EDIT'
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Error linking collaboration shares:', e);
+    }
+
+    res.status(201).json(newNote);
+  } catch (error) {
+    console.error('Error adding note to my files:', error);
+    res.status(500).json({ error: 'Failed to add note to files' });
   }
 };
 
@@ -341,7 +537,10 @@ export const getTrashedNotes = async (req: AuthenticatedRequest, res: Response) 
     const notes = await prisma.note.findMany({
       where: { 
         userId, 
-        deletedAt: { not: null } 
+        OR: [
+          { deletedAt: { not: null } },
+          { isArchived: true }
+        ]
       },
       orderBy: { deletedAt: 'desc' },
       include: {

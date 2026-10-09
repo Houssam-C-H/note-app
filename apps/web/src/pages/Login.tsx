@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../api/auth';
 import styles from '../styles/Auth.module.css';
@@ -11,6 +11,7 @@ export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +21,8 @@ export const Login = () => {
     try {
       const data = await authApi.login({ email, password });
       setAuth(data.user, data.accessToken);
-      navigate('/dashboard'); // We will create this later
+      const redirectUrl = searchParams.get('redirect') || '/dashboard';
+      navigate(redirectUrl);
     } catch (err: any) {
       setError(err.message || 'An error occurred during login');
     } finally {

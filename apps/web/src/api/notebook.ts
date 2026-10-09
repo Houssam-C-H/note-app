@@ -123,4 +123,36 @@ export const notebookApi = {
     if (!res.ok) throw new Error(data.error || 'Failed to reorder sections');
     return data;
   },
+
+  getTrashedNotebooks: async () => {
+    const res = await fetch(`${API_URL}/notebooks/trash`, {
+      headers: defaultHeaders(),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch trashed notebooks');
+    return data;
+  },
+
+  restoreNotebook: async (notebookId: string) => {
+    const res = await fetch(`${API_URL}/notebooks/trash/${notebookId}/restore`, {
+      method: 'POST',
+      headers: defaultHeaders(),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to restore notebook');
+    return data;
+  },
+
+  permanentDeleteNotebook: async (notebookId: string) => {
+    const res = await fetch(`${API_URL}/notebooks/trash/${notebookId}`, {
+      method: 'DELETE',
+      headers: defaultHeaders(),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to permanently delete notebook');
+    return data;
+  },
 };

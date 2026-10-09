@@ -34,6 +34,7 @@ interface NotebookState {
   updateNotebook: (id: string, updates: Partial<Notebook>) => Promise<void>;
   deleteNotebook: (id: string) => Promise<void>;
   createSection: (notebookId: string, title: string, color?: string) => Promise<void>;
+  ensureDefaultSection: (notebookId: string) => Promise<string>;
   updateSection: (notebookId: string, sectionId: string, updates: Partial<Section>) => Promise<void>;
   deleteSection: (notebookId: string, sectionId: string) => Promise<void>;
   reorderNotebooks: (orderedIds: string[]) => Promise<void>;
@@ -151,10 +152,20 @@ export const useNotebookStore = create<NotebookState>((set, get) => ({
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
     });
 
+    // Also create default section so notes can be added immediately
+    const defaultSecId = generateId();
+    const defaultSec: Section = { id: defaultSecId, notebookId: id, title: 'Main', color: newNb.color, sortOrder: 0 };
+    newNb.sections = [defaultSec];
+    await db.sections.put({
+      id: defaultSecId, title: 'Main', notebookId: id, order: 0,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+
     // Update state
     set((state) => ({ 
       notebooks: [...state.notebooks, newNb],
-      activeNotebookId: id
+      activeNotebookId: id,
+      activeSectionId: defaultSecId
     }));
 
     // Queue sync
@@ -162,8 +173,38 @@ export const useNotebookStore = create<NotebookState>((set, get) => ({
       type: 'CREATE',
       entity: 'NOTEBOOK',
       entityId: id,
-      data: { title, color: newNb.color }
+      data: { id, title, color: newNb.color }
     });
+    await useOfflineSyncStore.getState().enqueueMutation({
+      type: 'CREATE',
+      entity: 'SECTION',
+      entityId: defaultSecId,
+      data: { id: defaultSecId, notebookId: id, title: 'Main', color: newNb.color }
+    });
+  },
+
+  ensureDefaultSection: async (notebookId: string): Promise<string> => {
+    const nb = get().notebooks.find(n => n.id === notebookId);
+    if (nb && nb.sections.length > 0) {
+      return nb.sections[0].id;
+    }
+    const secId = generateId();
+    const newSec: Section = { id: secId, notebookId, title: 'Main', color: nb?.color || '#7719aa', sortOrder: 0 };
+    await db.sections.put({
+      id: secId, title: 'Main', notebookId, order: 0,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+    set(state => ({
+      notebooks: state.notebooks.map(n => n.id === notebookId ? { ...n, sections: [...n.sections, newSec] } : n),
+      activeSectionId: secId
+    }));
+    await useOfflineSyncStore.getState().enqueueMutation({
+      type: 'CREATE',
+      entity: 'SECTION',
+      entityId: secId,
+      data: { id: secId, notebookId, title: 'Main', color: newSec.color }
+    });
+    return secId;
   },
 
   updateNotebook: async (id, updates) => {
@@ -191,12 +232,20 @@ export const useNotebookStore = create<NotebookState>((set, get) => ({
   },
 
   deleteNotebook: async (id) => {
-    // Delete locally
-    await db.notebooks.delete(id);
-    // Cascade delete sections locally
+    // Soft delete locally in Dexie so it is visible in Trash
+    const existing = await db.notebooks.get(id);
+    if (existing) {
+      await db.notebooks.put({ ...existing, isArchived: true, deletedAt: new Date().toISOString() } as any);
+    }
+    
+    // Also soft delete notes in this notebook locally
     const sections = await db.sections.where({ notebookId: id }).toArray();
-    for (const sec of sections) {
-      await db.sections.delete(sec.id);
+    const secIds = sections.map(s => s.id);
+    if (secIds.length > 0) {
+      const relatedNotes = await db.notes.where('sectionId').anyOf(secIds).toArray();
+      for (const n of relatedNotes) {
+        await db.notes.put({ ...n, isArchived: true, deletedAt: new Date().toISOString() });
+      }
     }
 
     // Update state

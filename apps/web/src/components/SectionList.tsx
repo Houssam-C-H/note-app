@@ -3,6 +3,7 @@ import { useNotebookStore, Section } from '../store/notebookStore';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { ShareDialog } from './ShareDialog';
 import { Share2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import styles from '../styles/SectionList.module.css';
 
 export const SectionList: React.FC = () => {
@@ -16,19 +17,35 @@ export const SectionList: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !activeNotebookId) return;
-    await createSection(activeNotebookId, newTitle.trim());
-    setNewTitle('');
-    setIsCreating(false);
+    try {
+      await createSection(activeNotebookId, newTitle.trim());
+      toast.success('Section created');
+      setNewTitle('');
+      setIsCreating(false);
+    } catch (err) {
+      toast.error('Failed to create section');
+    }
   };
 
   const handleDragEnd = (result: any) => {
-    if (!result.destination || !activeNotebookId) return;
+    if (!result.destination || !activeNotebookId || !activeNotebook) return;
     
     const items = Array.from(activeNotebook.sections);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
     reorderSections(activeNotebookId, items.map(sec => sec.id));
+  };
+
+  const handleDelete = async (sectionId: string) => {
+    if (confirm('Delete this section?')) {
+      try {
+        await deleteSection(activeNotebookId!, sectionId);
+        toast.success('Section deleted');
+      } catch (err) {
+        toast.error('Failed to delete section');
+      }
+    }
   };
 
   if (!activeNotebook) {
@@ -97,7 +114,7 @@ export const SectionList: React.FC = () => {
                         className={styles.deleteButton}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm('Delete this section?')) deleteSection(activeNotebookId!, sec.id);
+                          handleDelete(sec.id);
                         }}
                       >
                         ×

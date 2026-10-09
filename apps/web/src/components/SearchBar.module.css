@@ -1,121 +1,240 @@
 .searchContainer {
   position: relative;
-  width: 400px;
-  max-width: 100%;
+  width: 240px;
 }
 
 .searchInputWrapper {
   display: flex;
   align-items: center;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 12px;
-  height: 40px;
-  transition: all 0.2s;
+  background-color: #f3f2f1;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0 10px;
+  height: 28px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .searchInputWrapper {
+  background-color: #2b2b2b;
+}
+
+.searchInputWrapper:hover {
+  background-color: #edebe9;
+}
+
+[data-theme="dark"] .searchInputWrapper:hover {
+  background-color: #333333;
 }
 
 .searchInputWrapper:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  background-color: #ffffff;
+  border-color: #7719aa;
+  box-shadow: 0 0 0 1.5px rgba(119, 25, 170, 0.25);
+}
+
+[data-theme="dark"] .searchInputWrapper:focus-within {
+  background-color: #1e1e1e;
+  border-color: #c084fc;
+  box-shadow: 0 0 0 1.5px rgba(192, 132, 252, 0.25);
 }
 
 .searchIcon {
-  color: var(--text-tertiary);
-  margin-right: 8px;
+  color: #605e5c;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .searchIcon {
+  color: #a19f9d;
 }
 
 .searchInput {
   flex: 1;
   border: none;
   background: transparent;
-  color: var(--text);
-  font-size: 0.9375rem;
+  color: #201f1e;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
   outline: none;
+  padding: 0;
+  min-width: 0;
+}
+
+[data-theme="dark"] .searchInput {
+  color: #ffffff;
 }
 
 .searchInput::placeholder {
-  color: var(--text-tertiary);
+  color: #737373;
 }
 
-.dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  width: 100%;
-  max-height: 400px;
-  overflow-y: auto;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-}
-
-.sectionTitle {
-  padding: 12px 16px 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  letter-spacing: 0.05em;
-}
-
-.recentSearchItem {
-  padding: 8px 16px;
+.clearBtn {
+  background: transparent;
+  border: none;
+  color: #8a8886;
   cursor: pointer;
+  padding: 2px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
+  justify-content: center;
+  border-radius: 50%;
+  margin-left: 4px;
 }
 
-.recentSearchItem:hover {
-  background-color: var(--surface-hover);
-  color: var(--text);
+.clearBtn:hover {
+  color: #201f1e;
+  background-color: #e1dfdd;
+}
+
+[data-theme="dark"] .clearBtn:hover {
+  color: #ffffff;
+  background-color: #444444;
+}
+
+/* Floating Search Results Dropdown */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 350px;
+  max-height: 440px;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border: 1px solid #d1d1d1;
+  border-radius: 6px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .dropdown {
+  background-color: #252526;
+  border-color: #3e3e3e;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.sectionHeader {
+  padding: 6px 14px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #605e5c;
+  font-family: 'Segoe UI', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .sectionHeader {
+  color: #8c8c8c;
 }
 
 .resultItem {
-  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 14px;
+  gap: 10px;
   cursor: pointer;
-  border-bottom: 1px solid var(--border);
-}
-
-.resultItem:last-child {
-  border-bottom: none;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.1s ease;
+  box-sizing: border-box;
 }
 
 .resultItem:hover {
-  background-color: var(--surface-hover);
+  background-color: #f3f2f1;
 }
 
-.resultTitle {
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 4px;
+[data-theme="dark"] .resultItem:hover {
+  background-color: #2f2f30;
 }
 
-.resultPreview {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.resultIconWrapper {
+  margin-top: 2px;
+  color: #7719aa;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .resultIconWrapper {
+  color: #c084fc;
+}
+
+.resultContent {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
 }
 
-.resultPreview :global(b) {
-  color: var(--primary);
-  background-color: rgba(99, 102, 241, 0.1);
-  border-radius: 2px;
-  padding: 0 2px;
+.resultTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #201f1e;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+[data-theme="dark"] .resultTitle {
+  color: #ffffff;
+}
+
+.resultPreview {
+  font-size: 11.5px;
+  color: #605e5c;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+[data-theme="dark"] .resultPreview {
+  color: #a19f9d;
+}
+
+.recentItem {
+  display: flex;
+  align-items: center;
+  padding: 7px 14px;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: #323130;
+  transition: background-color 0.1s ease;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+[data-theme="dark"] .recentItem {
+  color: #e1dfdd;
+}
+
+.recentItem:hover {
+  background-color: #f3f2f1;
+}
+
+[data-theme="dark"] .recentItem:hover {
+  background-color: #2f2f30;
+}
+
+.recentIcon {
+  color: #8a8886;
+  flex-shrink: 0;
 }
 
 .emptyState, .loadingState {
-  padding: 24px;
+  padding: 18px 14px;
   text-align: center;
-  color: var(--text-tertiary);
-  font-size: 0.875rem;
+  font-size: 12.5px;
+  color: #8a8886;
+  font-family: 'Segoe UI', sans-serif;
 }

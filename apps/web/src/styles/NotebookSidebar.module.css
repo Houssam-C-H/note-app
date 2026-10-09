@@ -1,209 +1,435 @@
 .sidebar {
-  width: 200px;
-  min-width: 200px;
+  width: 250px;
+  min-width: 250px;
   flex-shrink: 0;
-  background-color: #f3f4f6;
-  border-right: 1px solid #e5e7eb;
+  background-color: #f3f2f1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
+  border-right: 1px solid #e1dfdd;
+  user-select: none;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+[data-theme="dark"] .sidebar {
+  background-color: #1f1f1f;
+  border-right: 1px solid #333333;
 }
 
 .topMenu {
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  gap: 0.5rem;
+  padding: 6px 8px;
+  border-bottom: 1px solid #edebe9;
+  gap: 2px;
+}
+
+[data-theme="dark"] .topMenu {
+  border-bottom: 1px solid #333333;
 }
 
 .menuItem {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: none;
-  border: none;
-  border-radius: 6px;
-  color: #4b5563;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  color: #605e5c;
+  font-size: 12px;
+  font-family: 'Segoe UI', sans-serif;
   cursor: pointer;
-  transition: all 0.2s;
   text-align: left;
+  transition: all 0.1s ease;
 }
 
 .menuItem:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: #edebe9;
+  color: #323130;
+}
+
+[data-theme="dark"] .menuItem {
+  color: #a19f9d;
+}
+
+[data-theme="dark"] .menuItem:hover {
+  background-color: #2b2b2b;
+  color: #ffffff;
 }
 
 .menuItemActive {
-  background-color: #e0e7ff;
-  color: #4338ca;
+  background-color: #edebe9;
+  color: #7719aa;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .menuItemActive {
+  background-color: #2b2b2b;
+  color: #c084fc;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px 6px 14px;
 }
 
 .title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #4b5563;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0;
-}
-
-.addButton {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a8886;
+  font-family: 'Segoe UI', sans-serif;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  padding: 0 0.5rem;
-  transition: color 0.2s;
 }
 
-.addButton:hover {
-  color: #111827;
+.addFolderBtn {
+  background: transparent;
+  border: none;
+  color: #605e5c;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.addFolderBtn:hover {
+  background-color: #edebe9;
+  color: #323130;
+}
+
+[data-theme="dark"] .addFolderBtn {
+  color: #a19f9d;
+}
+
+/* Forms */
 .createForm {
-  padding: 0.5rem 1rem;
+  padding: 8px 12px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #edebe9;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+[data-theme="dark"] .createForm {
+  background-color: #262626;
+  border-bottom: 1px solid #333333;
 }
 
 .input {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  padding: 5px 8px;
+  border: 1px solid #c8c6c4;
+  border-radius: 2px;
+  font-size: 12px;
   outline: none;
+  background-color: #ffffff;
+  color: #323130;
 }
 
-.input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+[data-theme="dark"] .input {
+  background-color: #333333;
+  border-color: #555;
+  color: #ffffff;
+}
+
+.colorPalette {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.colorDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.selectedDot {
+  transform: scale(1.2);
+  outline: 2px solid #7719aa;
+  outline-offset: 1px;
 }
 
 .formActions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.submitBtn, .cancelBtn {
-  flex: 1;
-  padding: 0.25rem 0.5rem;
-  border: none;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  cursor: pointer;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .submitBtn {
-  background-color: #6366f1;
-  color: white;
-}
-
-.submitBtn:hover {
-  background-color: #4f46e5;
+  background-color: #7719aa;
+  color: #ffffff;
+  border: none;
+  border-radius: 2px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
 }
 
 .cancelBtn {
-  background-color: #e5e7eb;
-  color: #374151;
+  background: transparent;
+  color: #605e5c;
+  border: 1px solid #c8c6c4;
+  border-radius: 2px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
 }
 
-.cancelBtn:hover {
-  background-color: #d1d5db;
-}
-
+/* Tree list */
 .list {
-  list-style: none;
-  padding: 0.5rem;
-  margin: 0;
-  overflow-y: auto;
   flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
 }
 
-.item {
+.folderWrapper {
+  margin-bottom: 2px;
+}
+
+/* Folder Row */
+.folderRow {
   display: flex;
   align-items: center;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
+  padding: 6px 10px;
   cursor: pointer;
-  transition: background-color 0.2s;
-  margin-bottom: 0.25rem;
+  position: relative;
+  transition: background-color 0.1s ease;
+  gap: 6px;
 }
 
-.item:hover {
-  background-color: #e5e7eb;
+.folderRow:hover {
+  background-color: #edebe9;
 }
 
-.item.active {
-  background-color: #e0e7ff;
+[data-theme="dark"] .folderRow:hover {
+  background-color: #2a2a2a;
 }
 
-.colorIndicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 0.75rem;
+.activeFolderRow {
+  background-color: #eae8e8;
+}
+
+[data-theme="dark"] .activeFolderRow {
+  background-color: #2d2d2d;
+}
+
+.chevronBtn, .subChevronBtn {
+  background: transparent;
+  border: none;
+  color: #8a8886;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
-.itemTitle {
-  flex: 1;
-  font-size: 0.875rem;
-  color: #374151;
+.chevronPlaceholder {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.folderIcon {
+  flex-shrink: 0;
+}
+
+.folderTitle {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #201f1e;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
 }
 
-.item.active .itemTitle {
-  color: #4338ca;
-  font-weight: 500;
+[data-theme="dark"] .folderTitle {
+  color: #f3f2f1;
 }
 
-.item.dragging {
-  background-color: #f3f4f6;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  opacity: 0.9;
-}
-
-.deleteButton, .archiveButton {
-  background: none;
-  border: none;
-  color: #9ca3af;
-  cursor: pointer;
+.folderActions, .pageActions {
   opacity: 0;
-  transition: opacity 0.2s;
-  padding: 0.25rem;
-  font-size: 1.25rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  transition: opacity 0.15s ease;
 }
 
-.archiveButton {
-  font-size: 1rem;
-  margin-right: 0.25rem;
-}
-
-.item:hover .deleteButton, .item:hover .archiveButton {
+.folderRow:hover .folderActions,
+.pageRow:hover .pageActions,
+.subPageRow:hover .pageActions {
   opacity: 1;
 }
 
-.deleteButton:hover {
-  color: #ef4444;
+.actionBtn {
+  background: transparent;
+  border: none;
+  color: #605e5c;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.archiveButton:hover {
-  color: #f59e0b;
+.actionBtn:hover {
+  background-color: #d2d0ce;
+  color: #201f1e;
+}
+
+[data-theme="dark"] .actionBtn:hover {
+  background-color: #3d3d3d;
+  color: #ffffff;
+}
+
+/* Pages Dropdown directly inside Folder */
+.pagesList {
+  display: flex;
+  flex-direction: column;
+  padding-left: 12px;
+}
+
+.pageGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Page Row */
+.pageRow {
+  display: flex;
+  align-items: center;
+  padding: 5px 8px 5px 12px;
+  cursor: pointer;
+  gap: 6px;
+  transition: background-color 0.1s ease;
+  border-left: 2px solid transparent;
+}
+
+.pageRow:hover {
+  background-color: #edebe9;
+}
+
+[data-theme="dark"] .pageRow:hover {
+  background-color: #2a2a2a;
+}
+
+.activePageRow {
+  background-color: #ffffff !important;
+  border-left: 2px solid #7719aa !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+[data-theme="dark"] .activePageRow {
+  background-color: #2b2b2b !important;
+  border-left: 2px solid #c084fc !important;
+}
+
+.pageIcon {
+  color: #605e5c;
+  flex-shrink: 0;
+}
+
+.activePageRow .pageIcon {
+  color: #7719aa;
+}
+
+[data-theme="dark"] .activePageRow .pageIcon {
+  color: #c084fc;
+}
+
+.pageTitle {
+  font-family: 'Segoe UI', 'Calibri', sans-serif;
+  font-size: 12.5px;
+  color: #323130;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.activePageRow .pageTitle {
+  font-weight: 600;
+  color: #201f1e;
+}
+
+[data-theme="dark"] .pageTitle {
+  color: #e1dfdd;
+}
+
+[data-theme="dark"] .activePageRow .pageTitle {
+  color: #ffffff;
+}
+
+/* Sub-pages (Subcategories) */
+.subPagesList {
+  display: flex;
+  flex-direction: column;
+  padding-left: 18px;
+}
+
+.subPageRow {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px 4px 8px;
+  cursor: pointer;
+  gap: 6px;
+  transition: background-color 0.1s ease;
+  border-left: 2px solid transparent;
+}
+
+.subPageRow:hover {
+  background-color: #edebe9;
+}
+
+[data-theme="dark"] .subPageRow:hover {
+  background-color: #2a2a2a;
+}
+
+.subPageCornerIcon {
+  color: #a19f9d;
+  flex-shrink: 0;
+}
+
+/* Add Page button at bottom of folder */
+.addPageRowBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 32px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 11.5px;
+  color: #7719aa;
+  transition: background-color 0.1s ease;
+  text-align: left;
+}
+
+.addPageRowBtn:hover {
+  background-color: #edebe9;
+}
+
+[data-theme="dark"] .addPageRowBtn {
+  color: #c084fc;
+}
+
+[data-theme="dark"] .addPageRowBtn:hover {
+  background-color: #2a2a2a;
 }

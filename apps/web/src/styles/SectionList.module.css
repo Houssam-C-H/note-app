@@ -1,24 +1,24 @@
 .container {
-  width: 200px;
-  min-width: 200px;
+  width: 240px;
+  min-width: 240px;
   flex-shrink: 0;
-  background-color: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
 .emptyContainer {
-  width: 200px;
-  min-width: 200px;
+  width: 240px;
+  min-width: 240px;
   flex-shrink: 0;
-  background-color: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #9ca3af;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   height: 100vh;
 }
@@ -27,14 +27,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #4b5563;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
@@ -47,14 +47,15 @@
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0 0.5rem;
-  transition: color 0.2s;
+  transition: var(--transition);
 }
 
 .addButton:hover {
-  color: #111827;
+  color: var(--text);
+  transform: scale(1.1);
 }
 
 .createForm {
@@ -87,18 +88,22 @@
   display: flex;
   align-items: center;
   padding: 0.5rem;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--transition);
   margin-bottom: 0.25rem;
+  color: var(--text-secondary);
 }
 
 .item:hover {
-  background-color: #f3f4f6;
+  background-color: var(--surface-hover);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
 }
 
 .item.active {
-  background-color: #f3e8ff;
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
 }
 
 .item.dragging {
@@ -118,24 +123,22 @@
 .itemTitle {
   flex: 1;
   font-size: 0.875rem;
-  color: #374151;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .item.active .itemTitle {
-  color: #7e22ce;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .deleteButton {
   background: none;
   border: none;
-  color: #9ca3af;
+  color: var(--text-secondary);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: var(--transition);
   padding: 0.25rem;
   font-size: 1.25rem;
   line-height: 1;
@@ -147,4 +150,5 @@
 
 .deleteButton:hover {
   color: #ef4444;
+  transform: scale(1.1);
 }

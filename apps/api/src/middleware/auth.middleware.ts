@@ -27,3 +27,24 @@ export const requireAuth = (req: AuthenticatedRequest, res: Response, next: Next
     return res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 };
+
+export const optionalAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  let token = '';
+
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.query.token && typeof req.query.token === 'string') {
+    token = req.query.token;
+  }
+
+  if (token) {
+    try {
+      const payload = verifyAccessToken(token);
+      req.user = payload;
+    } catch {
+      // Ignore invalid token in optional auth
+    }
+  }
+  next();
+};

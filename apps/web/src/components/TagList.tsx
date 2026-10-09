@@ -32,7 +32,7 @@ export const TagList = () => {
 
   if (!activeNote || !activeNotebookId || !activeSectionId) return null;
 
-  const noteTags = activeNote.tags || [];
+  const noteTags = (activeNote as any).tags || [];
 
   const handleAddTag = async (tagId: string) => {
     if (noteTags.find((t: any) => t.id === tagId)) return;

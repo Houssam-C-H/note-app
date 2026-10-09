@@ -1,0 +1,334 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  padding: 2px 10px;
+  gap: 4px;
+  width: 100%;
+  height: 58px;
+  max-height: 58px;
+  background: #fbfbfb;
+  overflow: visible;
+  position: relative;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .toolbar {
+  background: #202020;
+}
+
+.toolbarGroup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 4px;
+  height: 100%;
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.groupRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 3px;
+  height: 34px;
+}
+
+.groupLabel {
+  font-size: 10px;
+  color: #737373;
+  margin-top: 1px;
+  font-family: 'Segoe UI', -apple-system, sans-serif;
+  user-select: none;
+  line-height: 1;
+  text-align: center;
+}
+
+[data-theme="dark"] .groupLabel {
+  color: #8c8c8c;
+}
+
+.divider {
+  width: 1px;
+  height: 38px;
+  background-color: #edebe9;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .divider {
+  background-color: #3b3a39;
+}
+
+/* Ribbon Button - Compact standard OneNote button */
+.ribbonBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: 'Segoe UI', -apple-system, sans-serif;
+  color: #323130;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.1s ease;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .ribbonBtn {
+  color: #e1dfdd;
+}
+
+.ribbonBtn:hover {
+  background-color: #edebe9;
+  border-color: #c8c6c4;
+}
+
+[data-theme="dark"] .ribbonBtn:hover {
+  background-color: #2b2b2b;
+  border-color: #444;
+}
+
+.ribbonBtn.isActive {
+  background-color: #ede4f3;
+  border-color: #7719aa;
+  color: #7719aa;
+}
+
+[data-theme="dark"] .ribbonBtn.isActive {
+  background-color: #382449;
+  border-color: #c084fc;
+  color: #c084fc;
+}
+
+.ribbonBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Icon-only compact button */
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #323130;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .iconBtn {
+  color: #e1dfdd;
+}
+
+.iconBtn:hover {
+  background-color: #edebe9;
+  border-color: #c8c6c4;
+}
+
+[data-theme="dark"] .iconBtn:hover {
+  background-color: #2b2b2b;
+  border-color: #444;
+}
+
+.iconBtn.isActive {
+  background-color: #ede4f3;
+  border-color: #7719aa;
+  color: #7719aa;
+}
+
+[data-theme="dark"] .iconBtn.isActive {
+  background-color: #382449;
+  border-color: #c084fc;
+  color: #c084fc;
+}
+
+.iconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Native Selects (Font, Size, Styles) */
+.ribbonSelect {
+  height: 24px;
+  border: 1px solid #c8c6c4;
+  border-radius: 2px;
+  background-color: #ffffff;
+  color: #323130;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 11px;
+  padding: 0 4px;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .ribbonSelect {
+  background-color: #2b2b2b;
+  border-color: #444;
+  color: #e1dfdd;
+}
+
+/* Color Pickers */
+.colorPickerLabel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 24px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.colorPickerLabel:hover {
+  background-color: #edebe9;
+  border-color: #c8c6c4;
+}
+
+[data-theme="dark"] .colorPickerLabel:hover {
+  background-color: #2b2b2b;
+  border-color: #444;
+}
+
+.fontColorA {
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  color: #323130;
+}
+
+[data-theme="dark"] .fontColorA {
+  color: #ffffff;
+}
+
+.fontColorBar {
+  width: 13px;
+  height: 2.5px;
+  background-color: #7719aa;
+  border-radius: 1px;
+}
+
+.hiddenColorInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Real Dropdown Menu (for Table, Tags, Styles popup) */
+.dropdownContainer {
+  position: relative;
+  display: inline-flex;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #ffffff;
+  border: 1px solid #d1d1d1;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  min-width: 185px;
+  z-index: 9999;
+  padding: 5px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] .dropdownMenu {
+  background: #2b2b2b;
+  border-color: #444;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #323130;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .dropdownItem {
+  color: #e1dfdd;
+}
+
+.dropdownItem:hover {
+  background-color: #edebe9;
+}
+
+[data-theme="dark"] .dropdownItem:hover {
+  background-color: #383838;
+}
+
+.dropdownItem:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dropdownItemDanger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #d13438 !important;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.dropdownItemDanger:hover {
+  background-color: #fde7e9 !important;
+}
+
+[data-theme="dark"] .dropdownItemDanger:hover {
+  background-color: #442726 !important;
+}
+
+.dropdownItemDanger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background-color: #edebe9;
+  margin: 3px 0;
+}
+
+[data-theme="dark"] .dropdownDivider {
+  background-color: #3b3a39;
+}

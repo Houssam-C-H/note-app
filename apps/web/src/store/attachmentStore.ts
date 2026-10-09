@@ -11,7 +11,7 @@ interface AttachmentState {
   deleteAttachment: (noteId: string, id: string) => Promise<void>;
 }
 
-export const useAttachmentStore = create<AttachmentState>((set, get) => ({
+export const useAttachmentStore = create<AttachmentState>((set) => ({
   attachments: {},
   isLoading: false,
   error: null,

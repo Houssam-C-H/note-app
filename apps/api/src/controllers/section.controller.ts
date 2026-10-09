@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { z } from 'zod';
 
 const createSectionSchema = z.object({
+  id: z.string().uuid().optional(),
   title: z.string().min(1, 'Title is required').max(200),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format').optional(),
 });
@@ -66,13 +67,33 @@ export const createSection = async (req: AuthenticatedRequest, res: Response) =>
     });
     const nextSortOrder = (maxSort._max.sortOrder ?? -1) + 1;
 
-    const section = await prisma.section.create({
-      data: {
-        ...validatedData,
-        notebookId,
-        sortOrder: nextSortOrder,
-      },
-    });
+    const secId = validatedData.id;
+    let section;
+
+    if (secId) {
+      section = await prisma.section.upsert({
+        where: { id: secId },
+        update: {
+          title: validatedData.title,
+          color: validatedData.color,
+        },
+        create: {
+          id: secId,
+          title: validatedData.title,
+          color: validatedData.color,
+          notebookId,
+          sortOrder: nextSortOrder,
+        },
+      });
+    } else {
+      section = await prisma.section.create({
+        data: {
+          ...validatedData,
+          notebookId,
+          sortOrder: nextSortOrder,
+        },
+      });
+    }
 
     res.status(201).json(section);
   } catch (error) {

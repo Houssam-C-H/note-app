@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Search as SearchIcon, Clock, FileText } from 'lucide-react';
+import { Search as SearchIcon, Clock, FileText, X } from 'lucide-react';
 import { useSearchStore } from '../store/searchStore';
 import { useNotebookStore } from '../store/notebookStore';
 import { useNoteStore } from '../store/noteStore';
@@ -48,7 +48,7 @@ export const SearchBar = () => {
   }, [localQuery, setQuery, executeSearch]);
 
   const handleResultClick = (result: any) => {
-    addRecentSearch(query);
+    addRecentSearch(localQuery);
     setIsOpen(false);
     
     // Navigate to the note
@@ -62,20 +62,42 @@ export const SearchBar = () => {
     setIsOpen(true);
   };
 
+  const handleClear = () => {
+    setLocalQuery('');
+    setQuery('');
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && localQuery.trim()) {
       addRecentSearch(localQuery);
+      const trimmed = localQuery.trim();
+      let targetId = '';
+      if (trimmed.includes('http://') || trimmed.includes('https://') || trimmed.includes('/dashboard')) {
+        try {
+          const urlObj = new URL(trimmed.startsWith('http') ? trimmed : `http://dummy.com${trimmed}`);
+          targetId = urlObj.searchParams.get('id') || urlObj.searchParams.get('noteId') || '';
+        } catch {}
+      }
+      if (!targetId) {
+        const uuidMatch = trimmed.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+        if (uuidMatch) targetId = uuidMatch[0];
+      }
+      if (targetId) {
+        setIsOpen(false);
+        window.location.href = `/dashboard?shared=note&id=${targetId}`;
+        return;
+      }
     }
   };
 
   return (
     <div className={styles.searchContainer} ref={containerRef}>
       <div className={styles.searchInputWrapper}>
-        <SearchIcon size={18} className={styles.searchIcon} />
+        <SearchIcon size={15} className={styles.searchIcon} />
         <input
           type="text"
           className={styles.searchInput}
-          placeholder="Search notes..."
+          placeholder="Search Notes (Ctrl+E)"
           value={localQuery}
           onChange={(e) => {
             setLocalQuery(e.target.value);
@@ -84,6 +106,16 @@ export const SearchBar = () => {
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
         />
+        {localQuery && (
+          <button 
+            type="button" 
+            className={styles.clearBtn} 
+            onClick={handleClear}
+            title="Clear search"
+          >
+            <X size={13} />
+          </button>
+        )}
       </div>
 
       {isOpen && (
@@ -92,34 +124,38 @@ export const SearchBar = () => {
             // Show recent searches
             recentSearches.length > 0 ? (
               <>
-                <div className={styles.sectionTitle}>Recent Searches</div>
+                <div className={styles.sectionHeader}>Recent Searches</div>
                 {recentSearches.map((sq, i) => (
-                  <div key={i} className={styles.recentSearchItem} onClick={() => handleRecentClick(sq)}>
-                    <Clock size={14} />
+                  <div key={i} className={styles.recentItem} onClick={() => handleRecentClick(sq)}>
+                    <Clock size={14} className={styles.recentIcon} />
                     <span>{sq}</span>
                   </div>
                 ))}
               </>
             ) : (
-              <div className={styles.emptyState}>Type to start searching</div>
+              <div className={styles.emptyState}>Type to search notes...</div>
             )
           ) : isLoading ? (
             <div className={styles.loadingState}>Searching...</div>
           ) : results.length > 0 ? (
             <>
-              <div className={styles.sectionTitle}>Notes</div>
+              <div className={styles.sectionHeader}>Matching Notes</div>
               {results.map((result) => (
                 <div key={result.id} className={styles.resultItem} onClick={() => handleResultClick(result)}>
-                  <div className={styles.resultTitle}>
-                    <FileText size={14} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-                    {result.title || 'Untitled'}
+                  <div className={styles.resultIconWrapper}>
+                    <FileText size={16} />
                   </div>
-                  {result.preview && (
-                    <div 
-                      className={styles.resultPreview} 
-                      dangerouslySetInnerHTML={{ __html: result.preview }}
-                    />
-                  )}
+                  <div className={styles.resultContent}>
+                    <div className={styles.resultTitle}>
+                      {result.title || 'Untitled'}
+                    </div>
+                    {result.preview && (
+                      <div 
+                        className={styles.resultPreview} 
+                        dangerouslySetInnerHTML={{ __html: result.preview }}
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
             </>
