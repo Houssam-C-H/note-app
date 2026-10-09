@@ -36,9 +36,13 @@ import searchRoutes from './routes/search.routes';
 import tagRoutes from './routes/tag.routes';
 import attachmentRoutes from './routes/attachment.routes';
 import shareRoutes from './routes/share.routes';
+import sectionRoutes from './routes/section.routes';
+import noteRoutes from './routes/note.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/notebooks', notebookRoutes);
+app.use('/api/sections', sectionRoutes);
+app.use('/api/notes', noteRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/attachments', attachmentRoutes);

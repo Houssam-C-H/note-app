@@ -10,6 +10,8 @@ import { SectionList } from '../components/SectionList';
 import { NoteList } from '../components/NoteList';
 import { NoteEditor } from '../components/NoteEditor';
 import { SearchBar } from '../components/SearchBar';
+import { SharedWithMe } from '../components/SharedWithMe';
+import { Trash } from '../components/Trash';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import styles from '../styles/Dashboard.module.css';
 
@@ -18,7 +20,7 @@ export const Dashboard = () => {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const { fetchNotebooks, activeNotebookId, activeSectionId } = useNotebookStore();
   const { activeNoteId } = useNoteStore();
-  const { isSidebarOpen, toggleSidebar } = useUiStore();
+  const { isSidebarOpen, currentView, toggleSidebar } = useUiStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,12 +38,35 @@ export const Dashboard = () => {
     }
   };
 
+  const renderContentArea = () => {
+    if (currentView === 'shared') {
+      return <SharedWithMe />;
+    }
+    if (currentView === 'trash') {
+      return <Trash />;
+    }
+
+    // Default 'notebooks' view
+    if (!activeNotebookId) {
+      return <div className={styles.emptyState}>Select a notebook to get started</div>;
+    }
+    if (!activeSectionId) {
+      return <div className={styles.emptyState}>Select a section to view notes</div>;
+    }
+    return (
+      <div className={styles.notesLayout}>
+        <NoteList />
+        <NoteEditor key={activeNoteId || 'empty'} />
+      </div>
+    );
+  };
+
   return (
     <div className={styles.dashboardContainer}>
       {isSidebarOpen && (
         <>
           <NotebookSidebar />
-          <SectionList />
+          {currentView === 'notebooks' && <SectionList />}
         </>
       )}
       
@@ -64,16 +89,7 @@ export const Dashboard = () => {
         </header>
 
         <div className={styles.contentArea}>
-          {!activeNotebookId ? (
-            <div className={styles.emptyState}>Select a notebook to get started</div>
-          ) : !activeSectionId ? (
-            <div className={styles.emptyState}>Select a section to view notes</div>
-          ) : (
-            <div className={styles.notesLayout}>
-              <NoteList />
-              <NoteEditor key={activeNoteId || 'empty'} />
-            </div>
-          )}
+          {renderContentArea()}
         </div>
       </div>
     </div>

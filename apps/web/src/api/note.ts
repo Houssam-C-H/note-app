@@ -75,4 +75,36 @@ export const noteApi = {
     if (!res.ok) throw new Error(data.error || 'Failed to duplicate note');
     return data;
   },
+
+  getTrashedNotes: async () => {
+    const res = await fetch(`${API_URL}/notes/trash`, {
+      headers: defaultHeaders(),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fetch trashed notes');
+    return data;
+  },
+
+  restoreNote: async (noteId: string) => {
+    const res = await fetch(`${API_URL}/notes/trash/${noteId}/restore`, {
+      method: 'POST',
+      headers: defaultHeaders(),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to restore note');
+    return data;
+  },
+
+  permanentDeleteNote: async (noteId: string) => {
+    const res = await fetch(`${API_URL}/notes/trash/${noteId}`, {
+      method: 'DELETE',
+      headers: defaultHeaders(),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to permanently delete note');
+    return data;
+  },
 };

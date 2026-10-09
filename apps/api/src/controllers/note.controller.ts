@@ -333,3 +333,77 @@ export const searchNotes = async (req: AuthenticatedRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to search notes' });
   }
 };
+
+export const getTrashedNotes = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    const notes = await prisma.note.findMany({
+      where: { 
+        userId, 
+        deletedAt: { not: null } 
+      },
+      orderBy: { deletedAt: 'desc' },
+      include: {
+        section: {
+          include: { notebook: true }
+        }
+      }
+    });
+
+    res.json(notes);
+  } catch (error) {
+    console.error('Error fetching trashed notes:', error);
+    res.status(500).json({ error: 'Failed to fetch trashed notes' });
+  }
+};
+
+export const restoreNote = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { noteId } = req.params;
+
+    const note = await prisma.note.findFirst({
+      where: { id: noteId, userId },
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    const updated = await prisma.note.update({
+      where: { id: noteId },
+      data: { deletedAt: null, isArchived: false },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error restoring note:', error);
+    res.status(500).json({ error: 'Failed to restore note' });
+  }
+};
+
+export const permanentDeleteNote = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { noteId } = req.params;
+
+    const note = await prisma.note.findFirst({
+      where: { id: noteId, userId },
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    await prisma.note.delete({
+      where: { id: noteId },
+    });
+
+    res.json({ message: 'Note permanently deleted' });
+  } catch (error) {
+    console.error('Error permanently deleting note:', error);
+    res.status(500).json({ error: 'Failed to permanently delete note' });
+  }
+};
+

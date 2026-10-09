@@ -17,6 +17,40 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+.topMenu {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 0.5rem;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.menuItem:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.menuItemActive {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
 .title {
   font-size: 0.875rem;
   font-weight: 600;

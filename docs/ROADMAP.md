@@ -235,7 +235,7 @@
 
 ---
 
-## Phase 8 — Sharing & Trash
+## Phase 8 — Sharing & Trash ✅
 
 **Goal**: Users can share notes/notebooks and manage deleted items.
 
@@ -243,21 +243,21 @@
 
 | Task                              | Priority  |
 |-----------------------------------|-----------|
-| NoteShare model + migration        | P0        |
-| NotebookShare model + migration    | P0        |
-| Share endpoints (note + notebook)  | P0        |
-| Authorization cascade (notebook → notes) | P0 |
-| Share dialog UI                    | P0        |
-| Permission select (READ/EDIT)      | P0        |
-| Shared items page                  | P0        |
-| Revoke share                       | P0        |
-| Trash page UI                      | P0        |
-| Restore from trash                 | P0        |
-| Empty trash (hard delete)          | P0        |
-| Auto-empty trash after 30 days (BG job) | P1  |
-| Orphaned file cleanup job          | P1        |
-| Sharing authorization tests        | P0        |
-| Trash integration tests            | P0        |
+| NoteShare model + migration        | ✅ P0        |
+| NotebookShare model + migration    | ✅ P0        |
+| Share endpoints (note + notebook)  | ✅ P0        |
+| Authorization cascade (notebook → notes) | ✅ P0 |
+| Share dialog UI                    | ✅ P0        |
+| Permission select (READ/EDIT)      | ✅ P0        |
+| Shared items page                  | ✅ P0        |
+| Revoke share                       | ✅ P0        |
+| Trash page UI                      | ✅ P0        |
+| Restore from trash                 | ✅ P0        |
+| Empty trash (hard delete)          | ✅ P0        |
+| Auto-empty trash after 30 days (BG job) | ⏳ P1  |
+| Orphaned file cleanup job          | ⏳ P1        |
+| Sharing authorization tests        | ⏳ P0        |
+| Trash integration tests            | ⏳ P0        |
 
 **Deliverable**: Sharing with permissions + trash with restore.
 
